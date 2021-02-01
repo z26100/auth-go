@@ -3,30 +3,46 @@ package auth
 import "errors"
 
 type UserManagement struct {
-	users map[string]*UserProfile
+	Users map[string]*UserProfile
 }
 
-func DefaultUsermanagement() UserManagement {
+func DefaultUserManagement() UserManagement {
 	return UserManagement{
-		users: make(map[string]*UserProfile),
+		Users: make(map[string]*UserProfile),
 	}
 }
-
-func (u UserManagement) GetRolesForUser(userId string) map[Role]*Role {
-	return u.users[userId].roles
+func (u *UserManagement) Clear() {
+	u.Users = make(map[string]*UserProfile)
 }
 
-func (u *UserManagement) AddUser(userId string, roles ...Role) {
+func (u UserManagement) GetRolesForUser(userId string) []Role {
+	if u.Users == nil {
+		return nil
+	}
+	if u.Users[userId] == nil {
+		return nil
+	}
+	result := make([]Role, len(u.Users[userId].Roles))
+	for i, j := range u.Users[userId].Roles {
+		result[i] = Role(j)
+	}
+	return result
+}
+
+func (u *UserManagement) AddUser(userId string, roles ...Role) error {
 	p := defaultProfile()
-	u.users[userId] = &p
-	_ = u.AssignRolesToUser(userId, roles...)
+	u.Users[userId] = &p
+	return u.AssignRolesToUser(userId, roles...)
 }
 func (u UserManagement) GetUser(userId string) (*UserProfile, error) {
-	user := u.users[userId]
+	user := u.Users[userId]
 	if user == nil {
 		return nil, errors.New("no user found")
 	}
 	return user, nil
+}
+func (u *UserManagement) RemoveUser(userId string) {
+	delete(u.Users, userId)
 }
 
 func (u UserManagement) HasRole(userId string, role Role) bool {
@@ -43,17 +59,17 @@ func (u *UserManagement) AssignRolesToUser(userId string, roles ...Role) error {
 		return err
 	}
 	for _, role := range roles {
-		user.roles[role] = &role
+		user.AddRole(role)
 	}
 	return nil
 }
-func (u *UserManagement) removeRolesFromUser(userId string, roles ...Role) error {
+func (u *UserManagement) RemoveRolesFromUser(userId string, roles ...Role) error {
 	user, err := u.GetUser(userId)
 	if err != nil {
 		return err
 	}
 	for _, role := range roles {
-		delete(user.roles, role)
+		user.RemoveRole(role)
 	}
 	return nil
 }

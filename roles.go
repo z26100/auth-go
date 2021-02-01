@@ -1,5 +1,9 @@
 package auth
 
+import (
+	"sort"
+)
+
 type Role string
 
 const (
@@ -10,25 +14,39 @@ const (
 )
 
 type UserProfile struct {
-	roles map[Role]*Role
+	Roles []string
 }
 
 func (u UserProfile) HasRole(r Role) bool {
-	return u.roles[r] != nil
+	i := sort.SearchStrings(u.Roles, string(r))
+	return i < len(u.Roles) && u.Roles[i] == string(r)
 }
 
 func (u *UserProfile) AddRole(r Role) *Role {
-	role := &r
-	u.roles[r] = role
-	return role
+	i := sort.SearchStrings(u.Roles, string(r))
+	switch i {
+	case 0:
+		u.Roles = append([]string{string(r)}, u.Roles...)
+	default:
+		u.Roles = append(append(u.Roles[:i-1], string(r)), u.Roles[i:]...)
+	}
+	return &r
 }
 func (u *UserProfile) RemoveRole(r Role) {
-	delete(u.roles, r)
+	i := sort.SearchStrings(u.Roles, string(r))
+	switch i {
+	case 0:
+		u.Roles = u.Roles[1:]
+	case len(u.Roles):
+		u.Roles = append(u.Roles[:i-1], u.Roles[i+1])
+	default:
+		u.Roles = u.Roles[0 : len(u.Roles)-1]
+	}
 }
 
 func defaultProfile() UserProfile {
 	p := UserProfile{
-		roles: make(map[Role]*Role),
+		Roles: make([]string, 0),
 	}
 	p.AddRole(Anonymous)
 	return p
