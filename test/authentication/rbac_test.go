@@ -42,7 +42,7 @@ func TestRBACGetResource(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	permission := auth.AddPermission(":data:tags:get")
+	permission := auth.AddPermission("get::data:tags")
 	err = role.Assign(permission)
 	if err != nil {
 		t.Fatal(err)

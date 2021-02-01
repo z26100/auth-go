@@ -170,7 +170,7 @@ func DefaultRBACBasedClaimHandler(a RoleAuthorization) ClaimHandler {
 				return nil
 			}
 			roles := a.GetRoles(claims)
-			action := strings.ToLower(fmt.Sprintf("%s:%s", strings.ReplaceAll(r.URL.Path, "/", ":"), r.Method))
+			action := strings.ToLower(fmt.Sprintf("%s:%s", r.Method, strings.ReplaceAll(r.URL.Path, "/", ":")))
 			if IsPermitted(roles, action) {
 				return nil
 			}
