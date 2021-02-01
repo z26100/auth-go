@@ -6,6 +6,7 @@ import (
 	log "github.com/z26100/log-go"
 	"gopkg.in/yaml.v3"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -28,8 +29,15 @@ type RBACRole struct {
 }
 
 type RBACPermission struct {
-	gorbac.Permission
 	Name string
+}
+
+func (p RBACPermission) ID() string {
+	return p.Name
+}
+func (p RBACPermission) Match(action gorbac.Permission) bool {
+	match := regexp.MustCompile(p.ID()).MatchString(action.ID())
+	return match
 }
 
 func NewRole(name string) (*RBACRole, error) {
@@ -67,7 +75,6 @@ func AddPermission(name string) RBACPermission {
 	permission := RBACPermission{
 		Name: name,
 	}
-	permission.Permission = gorbac.NewLayerPermission(strings.ToLower(strings.TrimSpace(name)))
 	return permission
 }
 
@@ -79,8 +86,7 @@ func IsGranted(roleId string, p RBACPermission, fc AssertionFunc) bool {
 
 func IsPermitted(roles []Role, action string) bool {
 	p := RBACPermission{
-		Permission: gorbac.NewLayerPermission(action),
-		Name:       action,
+		Name: strings.TrimSpace(strings.ToLower(action)),
 	}
 	for _, role := range roles {
 		if IsGranted(string(role), p, nil) {

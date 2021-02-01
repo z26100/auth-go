@@ -93,7 +93,7 @@ func TestPermission(t *testing.T) {
 	if p.Name != "P-1" {
 		t.Fatal("unexpected permission id")
 	}
-	if p.ID() != "p-1" {
+	if p.ID() != "P-1" {
 		t.Fatal("unexpected permission id")
 	}
 	err = r.Assign(p)
@@ -110,6 +110,31 @@ func TestPermission(t *testing.T) {
 	}
 }
 
+func TestRegExPermission(t *testing.T) {
+	auth.NewRBAC()
+	defer auth.CloseRBAC()
+	r, err := auth.NewRole("test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := auth.AddPermission("get:[^:]+$")
+	err = r.Assign(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	granted := auth.IsGranted("test", auth.RBACPermission{
+		Name: "get:test",
+	}, nil)
+	if !granted {
+		t.Fatal("problem with permission grant")
+	}
+	granted = auth.IsGranted("test", auth.RBACPermission{
+		Name: "get:test:abc",
+	}, nil)
+	if granted {
+		t.Fatal("problem with permission grant")
+	}
+}
 func TestSave(t *testing.T) {
 	auth.NewRBAC()
 	defer auth.CloseRBAC()
