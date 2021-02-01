@@ -163,23 +163,16 @@ func DefaultRoleBasedClaimHandler(a RoleAuthorization) ClaimHandler {
 
 func DefaultRBACBasedClaimHandler(a RoleAuthorization) ClaimHandler {
 	return func(claims jwt.MapClaims, r *http.Request, w http.ResponseWriter) error {
-		switch r.Method {
-		case "GET", "OPTIONS":
-			// public endpoints can be viewed
-			if strings.HasPrefix(r.URL.Path, "/public") {
-				return nil
-			}
-			roles := a.GetRoles(claims)
-			action := strings.ToLower(fmt.Sprintf("%s:%s", r.Method, strings.ReplaceAll(r.URL.Path, "/", ":")))
-			if IsPermitted(roles, action) {
-				return nil
-			}
-			return ThrowUnauthorizedException(*r, w)
-		case "POST", "DELETE", "PUT":
-
-			return ThrowUnauthorizedException(*r, w)
-		default:
-			return ThrowUnauthorizedException(*r, w)
+		// public endpoints can be viewed
+		if strings.HasPrefix(r.URL.Path, "/public") {
+			return nil
 		}
+		roles := a.GetRoles(claims)
+		action := strings.ToLower(fmt.Sprintf("%s:%s", r.Method, strings.ReplaceAll(r.URL.Path, "/", ":")))
+		if IsPermitted(roles, action) {
+			return nil
+		}
+		return ThrowUnauthorizedException(*r, w)
+
 	}
 }
