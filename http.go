@@ -49,9 +49,10 @@ func (a AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// pass the claims to the claim handler
 	if a.claimHandler != nil {
 		err = a.claimHandler(claims, r, w)
-		if err != nil {
-			return
-		}
+	}
+	// pass the result to the error handler
+	if a.errorHandler(w, err) != nil {
+		return
 	}
 	// if error handler and claim handler returned no error we can
 	// safely pass the request to the next handler
